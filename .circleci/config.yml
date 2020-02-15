@@ -2,23 +2,25 @@ version: 2
 jobs:
   build:
     docker:
-      - image: maven:3.6.2-jdk-11
+    - image: circleci/php:7.1-browsers
+    - image: circleci/mysql:9.4
+
+    working_directory: ~/repo
+
     steps:
-      - checkout
-      - run:
-          name: Build
-          command: |
-            mvn clean
-            mvn package
-      - run:
-          name: Deployment
-          command: |
-            if [ "${CIRCLE_BRANCH}" = "master" ]; then
-              chmod 700 id.rsa
-              scp -i id.rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ./target/*.war tomcat@assignment.econveyir.com.au:/opt/bitnami/apache-tomcat/webapps/app.war
-            fi
-workflows:
-  version: 2
-  build_and_push:
-    jobs:
-      - build
+    - checkout
+    - run: composer install -n --prefer-dist
+
+    - run: phpunit
+  deploy:
+    docker:
+    - image: circleci/node:chakracore-8.11.1
+    steps:
+    - restore_cache:
+        keys:
+        - v1-dependencies-{{ checksum "package.json" }}
+    - run:
+        name: AWS EC2 deploy
+        command: |
+            scp -r -o StrictHostKeyChecking=no ./ ubuntu@3.105.35.216:/home/circleci-aws/
+            ssh -o StrictHostKeyChecking=no ubuntu@3.105.35.216 "./deploy.sh"
