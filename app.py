@@ -53,4 +53,4 @@ if __name__ == "__main__":
         examples=["https://www.bing.com", "https://www.baidu.com"],
         cache_examples=False,
         title=_L("短链接生成"),
-    ).launch(css="#gradio-share-link-button-0 { display: none; }")
+    ).launch(css="#gradio-share-link-button-0 { display: none; }", ssr_mode=False)
