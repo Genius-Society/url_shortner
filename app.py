@@ -1,8 +1,14 @@
+import os
+import re
 import json
 import requests
 import gradio as gr
-from utils import is_valid_url, HEADER, EN_US, API_URL
 
+EN_US = os.getenv("LANG") != "zh_CN.UTF-8"
+API_URL = "https://monojson.com/api/short-link"
+HEADER = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0",
+}
 ZH2EN = {
     "输入长链接": "Input a long URL",
     "输出短链接": "Output short URL",
@@ -15,6 +21,18 @@ ZH2EN = {
 
 def _L(zh_txt: str):
     return ZH2EN[zh_txt] if EN_US else zh_txt
+
+
+def is_valid_url(url):
+    # 定义 URL 的正则表达式
+    pattern = re.compile(
+        r"^(https?://)?"  # 协议（http 或 https，可选）
+        r"([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}"  # 域名
+        r"(:\d+)?"  # 端口号（可选）
+        r"(/[^ ]*)?$"  # 路径（可选）
+    )
+    # 使用正则表达式匹配 URL
+    return bool(pattern.match(url))
 
 
 # outer func
@@ -37,8 +55,8 @@ def infer(longUrl: str):
     return status, shortUrl, preview
 
 
-if __name__ == "__main__":
-    gr.Interface(
+def main():
+    return gr.Interface(
         fn=infer,
         inputs=gr.Textbox(
             label=_L("输入长链接"),
@@ -53,4 +71,8 @@ if __name__ == "__main__":
         examples=["https://www.bing.com", "https://www.baidu.com"],
         cache_examples=False,
         title=_L("短链接生成"),
-    ).launch(css="#gradio-share-link-button-0 { display: none; }", ssr_mode=False)
+    )
+
+
+if __name__ == "__main__":
+    main().launch(css="#gradio-share-link-button-0 { display: none; }", ssr_mode=False)
